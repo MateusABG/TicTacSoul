@@ -1,0 +1,87 @@
+[gd_scene load_steps=10 format=2]
+
+[ext_resource path="res://Sprites/StartScreen/VoltarAoMenuClicked.png" type="Texture" id=1]
+[ext_resource path="res://Sprites/StartScreen/ButtonSairNormal.png" type="Texture" id=2]
+[ext_resource path="res://Sprites/StartScreen/JogarDeNovoCLicked.png" type="Texture" id=3]
+[ext_resource path="res://Sprites/StartScreen/JogarDeNovoNormal.png" type="Texture" id=4]
+[ext_resource path="res://Sprites/StartScreen/VocePerdeu.png" type="Texture" id=5]
+[ext_resource path="res://Sprites/StartScreen/VoltarAoMenuNormal.png" type="Texture" id=6]
+[ext_resource path="res://Sprites/StartScreen/ButtonSairClickedl.png" type="Texture" id=7]
+[ext_resource path="res://Sprites/Per.png" type="Texture" id=8]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Node2D
+
+
+# Declare member variables here. Examples:
+# var a = 2
+# var b = \"text\"
+
+
+# Called when the node enters the scene tree for the first time.
+func _ready():
+	pass # Replace with function body.
+
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+#func _process(delta):
+#	pass
+
+
+func _on_TryAgain_pressed():
+	get_tree().change_scene(\"res://Scenes/GameScene.tscn\")
+	pass # Replace with function body.
+
+
+func _on_QUIT_pressed():
+	get_tree().quit()
+	pass # Replace with function body.
+
+
+func _on_VoltarAoMenu_pressed():
+	get_tree().change_scene(\"res://Scenes/MainMenu.tscn\")
+	pass # Replace with function body.
+"
+
+[node name="Node2D" type="Node2D"]
+script = SubResource( 1 )
+
+[node name="Per" type="Sprite" parent="."]
+position = Vector2( 525, 249.5 )
+scale = Vector2( 1.26, 1.175 )
+texture = ExtResource( 8 )
+
+[node name="GameOver" type="Sprite" parent="."]
+position = Vector2( 521, 155 )
+texture = ExtResource( 5 )
+
+[node name="TryAgain" type="TextureButton" parent="."]
+margin_left = 375.0
+margin_top = 322.0
+margin_right = 655.0
+margin_bottom = 397.0
+texture_normal = ExtResource( 4 )
+texture_hover = ExtResource( 3 )
+texture_focused = ExtResource( 4 )
+
+[node name="VoltarAoMenu" type="TextureButton" parent="."]
+margin_left = 375.0
+margin_top = 403.0
+margin_right = 655.0
+margin_bottom = 478.0
+texture_normal = ExtResource( 6 )
+texture_hover = ExtResource( 1 )
+texture_focused = ExtResource( 6 )
+
+[node name="QUIT" type="TextureButton" parent="."]
+margin_left = 374.0
+margin_top = 484.0
+margin_right = 654.0
+margin_bottom = 559.0
+texture_normal = ExtResource( 2 )
+texture_hover = ExtResource( 7 )
+texture_focused = ExtResource( 2 )
+
+[connection signal="pressed" from="TryAgain" to="." method="_on_TryAgain_pressed"]
+[connection signal="pressed" from="VoltarAoMenu" to="." method="_on_VoltarAoMenu_pressed"]
+[connection signal="pressed" from="QUIT" to="." method="_on_QUIT_pressed"]

@@ -1,0 +1,28 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://Scripts/Images.gd" type="Script" id=1]
+
+[sub_resource type="RectangleShape2D" id=1]
+extents = Vector2( 515.5, 302 )
+
+[node name="Node2D" type="Node2D"]
+script = ExtResource( 1 )
+
+[node name="Area2D" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+position = Vector2( 509.5, 298 )
+shape = SubResource( 1 )
+
+[node name="Images" type="Sprite" parent="."]
+position = Vector2( 507, 296 )
+
+[node name="Button" type="Button" parent="."]
+margin_left = 856.0
+margin_top = 547.0
+margin_right = 1023.0
+margin_bottom = 595.0
+text = "Skip"
+
+[connection signal="input_event" from="Area2D" to="." method="_on_Area2D_input_event"]
+[connection signal="pressed" from="Button" to="." method="_on_Button_pressed"]
