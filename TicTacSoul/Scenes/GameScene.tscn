@@ -363,10 +363,10 @@ scale = Vector2( 0.290573, 0.257331 )
 texture = ExtResource( 3 )
 
 [node name="0,0" parent="Board" instance=ExtResource( 2 )]
-position = Vector2( -53, -16 )
+position = Vector2( -48, -26 )
 
 [node name="0,1" parent="Board" instance=ExtResource( 2 )]
-position = Vector2( 129, -19 )
+position = Vector2( 134, -21 )
 
 [node name="0,2" parent="Board" instance=ExtResource( 2 )]
 position = Vector2( 311, -23 )
@@ -381,13 +381,13 @@ position = Vector2( 122, 143 )
 position = Vector2( 315, 142 )
 
 [node name="2,0" parent="Board" instance=ExtResource( 2 )]
-position = Vector2( -73, 301 )
+position = Vector2( -49, 294 )
 
 [node name="2,1" parent="Board" instance=ExtResource( 2 )]
 position = Vector2( 113, 304 )
 
 [node name="2,2" parent="Board" instance=ExtResource( 2 )]
-position = Vector2( 301, 319 )
+position = Vector2( 298, 309 )
 
 [node name="RockCollision" type="AudioStreamPlayer2D" parent="Board"]
 position = Vector2( -351, -120 )
