@@ -22,6 +22,10 @@ Dificuldade="*res://Scripts/Dificuldade.gd"
 
 window/size/resizable=false
 
+[global]
+
+loop=false
+
 [gui]
 
 common/drop_mouse_on_gui_input_disabled=true

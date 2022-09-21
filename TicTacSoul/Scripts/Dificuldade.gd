@@ -11,6 +11,7 @@ enum Cutscene{ON,OFF}
 #Variavel que irá guardar permanentemente a dificuldade do jogo, até que a mesma seja alterada
 export var difficulty:int
 
+#Variavel que irá guardar permanentemente o estado da cutscene, ou seja, se está ativa ou não
 export var cutscene_turn:int
 
 func _ready():

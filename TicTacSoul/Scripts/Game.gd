@@ -1,19 +1,21 @@
 extends Node
 
 # Configuração: quantas linhas e colunas devo inicializar
-export var lines_board = 3;
-export var column_board = 3;
-export var current_player=0;
+export var linhas_tabuleiro = 3;
+export var colunas_tabuleiro = 3;
 
-var board_nodes;	# Referência para cada posição do tabuleiro de jogo 
+#Jogador atual jogando (0=Ninguem, 1=Player1, 2=CPU/Jogador2)
+export var jogador_atual=0;
+
+var nodos_tabuleiro;	# Referência para cada posição do tabuleiro de jogo 
 var game_ended;		# Verifica se jogo termina
 
 #Definindo valores para os jogadores/IA
 export var jogador=1
 export var cpu=2
 
-#Inicializando um tabuleiro auxiliar para as jogadas do minimax
-var local_nodes=clear()
+#Inicializando um tabuleiro auxiliar para as jogadas do minimax, este tabuleiro somente é usado pelo minimax
+var nodos_locais=clear()
 
 #Limpa tabuleiro local
 func clear():
@@ -25,46 +27,44 @@ func clear():
 # Inicialização
 func _ready():
 	# Criar matriz de posições apontando para cada node
-	board_nodes = []
-	for line in range(lines_board):
-		board_nodes.append([]);
-		for column in range(column_board):
+	nodos_tabuleiro = []
+	for line in range(linhas_tabuleiro):
+		nodos_tabuleiro.append([]);
+		for column in range(colunas_tabuleiro):
 			# Procurar node pelo nome
 			var node = get_node("%d,%d" % [line, column]); 
 			node.set_board(self, line, column);
-			board_nodes[line].append(node);
-	print(board_nodes)
+			nodos_tabuleiro[line].append(node); 
 	# Novo jogo
 	reset_game();
 	
 # Reinicia o jogo
 func reset_game():
-	current_player = 1;
+	jogador_atual = 1;
 	game_ended = false;
-	for line in range(lines_board):
-		for column in range(column_board):
-			board_nodes[line][column].set_player(0);
-			local_nodes[line][column]=0
-	local_nodes=clear()
+	for linha in range(linhas_tabuleiro):
+		for coluna in range(colunas_tabuleiro):
+			nodos_tabuleiro[linha][coluna].set_player(0);
+			nodos_locais[linha][coluna]=0
+	nodos_locais=clear()
 	
 # Chamado pelo BoardPiece quando a posição é clicada
-func node_clicked(line, column):	 
-	# Ignora clique caso a casa já esteja ocupada
-	$RockCollision.play(0.0)
-	if(board_nodes[line][column].get_player() != 0):
+func node_clicked(linha, coluna):	 
+	# Ignora clique caso a casa já esteja ocupada 
+	if(nodos_tabuleiro[linha][coluna].get_player() != 0):
 		return;   
-	make_move(line, column, current_player);
-
- 
+	make_move(linha, coluna, jogador_atual);    
 # Executa uma jogada de um jogador na posição especificada
 func make_move(line, column, player):  
 	#Coloca player na posicao desejada
-	board_nodes[line][column].set_player(player); 
+	 
+	nodos_tabuleiro[line][column].set_player(player); 
+	 
 	#Coloca o valor do jogador dentro dos nodos locais
-	if(player==jogador): 
-		local_nodes[line][column]=1
+	if(player==jogador):  
+		nodos_locais[line][column]=1
 	else: 
-		local_nodes[line][column]=2 
+		nodos_locais[line][column]=2  
 		 
 	# Verifica se o jogo terminou
 	var winning_player = check_winner();
@@ -74,29 +74,47 @@ func make_move(line, column, player):
 	if(winning_player > 0 and winning_player < 3):
 		game_ended = true; 
 		return;
-	 
+	if(jogador_atual!=0): 
+		$RockCollision.play()    
 	#Jogada do player, caso o mesmo for cpu, somente se deve trocar o jogador
-	if(current_player == cpu):  
-		current_player = jogador
+	if(jogador_atual == cpu):  
+		
+		jogador_atual = jogador
 	else: 
 		#Caso contrario, o mesmo deve checar a IA selecionada por dificuldade
 		#Sendo elas
 			# Fácil = Aleatória
 			# Média = Parcialmente aleatória
 			# Dificil = Minimax
-		current_player=cpu 
-		var move
-		if(celulas_vazias(local_nodes).size()!=0):
-			if(Dificuldade.get_difficulty()==Dificuldade.EASY): 
-				move=$AIMANAGER.random_move() 
-				node_clicked(move.x,move.y)
-			elif(Dificuldade.get_difficulty()==Dificuldade.MEDIUM): 
-				move=$AIMANAGER.nivel_medio()   
-				node_clicked(move.x,move.y)
-			elif(Dificuldade.get_difficulty()==Dificuldade.HARD): 
-				move=$AIMANAGER.minimax()  
-				node_clicked(move.x,move.y)
+		jogador_atual=cpu 
 		
+		#Variavel responsável por guardar as posições do proximo movimento
+		var movimento
+		
+		#Se ainda houver espaços livres nos nodos locais/tabuleiro de nodos, continar jogando
+		if(empty_cells(nodos_locais).size()!=0): 
+			#Tocar o som de pensamento do player a fim de simular que a maquina está pensando 
+			#Somente toca som de pensamento quando o modo for single player
+			if(Dificuldade.get_difficulty() != Dificuldade.MULTIPLAYER):   
+				yield(get_tree().create_timer(1),"timeout")
+				$thinking.play()     
+				yield(get_tree().create_timer(1),"timeout")
+				$thinking.stop()     
+			#Testa a dificuldade atual:
+				#Se facil, usa o metodo aleatorio
+				#Se dificil, usa o minimax
+				#Se medio usa o método semi-minimax.
+			if(Dificuldade.get_difficulty()==Dificuldade.EASY): 
+				movimento=$AIMANAGER.easy_level() 
+				node_clicked(movimento.x,movimento.y)
+			elif(Dificuldade.get_difficulty()==Dificuldade.MEDIUM):  
+				movimento=$AIMANAGER.medium_level()   
+				node_clicked(movimento.x,movimento.y)
+			elif(Dificuldade.get_difficulty()==Dificuldade.HARD):  
+				movimento=$AIMANAGER.hard_level()  
+				node_clicked(movimento.x,movimento.y)
+		
+	 
 	
 
 # Retorna se algum jogador ganhou o jogo atual.
@@ -104,12 +122,12 @@ func check_winner():
 	# Checa vitória para cada player
 	for player in [1, 2]:
 		# Verifica linhas
-		for line in range(lines_board):
+		for line in range(linhas_tabuleiro):
 			if(check_line(line, player)):
 				return player;
 		
 		# Verifica colunas
-		for column in range(column_board):
+		for column in range(colunas_tabuleiro):
 			if(check_column(column, player)):
 				return player;
 				
@@ -120,9 +138,9 @@ func check_winner():
 				
 	#Verifica se todas as posicoes estão ocupadas 
 	var empty_positions = 0;
-	for line in range(lines_board):
-		for column in range(column_board):
-			if(board_nodes[line][column].get_player() == 0):
+	for line in range(linhas_tabuleiro):
+		for column in range(colunas_tabuleiro):
+			if(nodos_tabuleiro[line][column].get_player() == 0):
 				empty_positions += 1;
 				
 	# Se todas as posições estão ocupadas, deu velha, retorna valor correspondente
@@ -135,59 +153,37 @@ func check_winner():
 	
 # Verifica se há uma linha inteira preenchida por um unico player
 func check_line(line, player):
-	for column in range(column_board):
-		if(board_nodes[line][column].get_player() != player):
+	for column in range(colunas_tabuleiro):
+		if(nodos_tabuleiro[line][column].get_player() != player):
 			return false;
 	return true;
 	
 # Verifica se há uma coluna inteira preenchida por um unico player
 func check_column(column, player):
-	for line in range(lines_board):
-		if(board_nodes[line][column].get_player() != player):
+	for line in range(linhas_tabuleiro):
+		if(nodos_tabuleiro[line][column].get_player() != player):
 			return false;
 	return true;
 
 # Verifica se uma diagonal inteira está marcada como um certo player	 
 func check_diagonal(diagonal, player):
 	# Percorre as linhas
-	for line in range(lines_board):
+	for line in range(linhas_tabuleiro):
 		var column;
 		# se for diagonal principal, a coluna deve ser igual a linha (Formato \)
 		if(diagonal == 0): 
 			column = line;
 		else: 
 			#caso contrario, a coluna deve ser o contrário da linha (Formato /)
-			column = column_board - line - 1;
+			column = colunas_tabuleiro - line - 1;
 		
 		#Se não houver player nessas diagonais, retorna falso
-		if(board_nodes[line][column].get_player() != player):
+		if(nodos_tabuleiro[line][column].get_player() != player):
 			return false;
 			
-	return true;
-	
-  
-func ganha(tabuleiro,jogador):
-	#Todos os possiveis estados de vitoria para os players
-	var win_estado=[
-		[tabuleiro[0][0],tabuleiro[0][1],tabuleiro[0][2]],
-		[tabuleiro[1][0],tabuleiro[1][1],tabuleiro[1][2]],
-		[tabuleiro[2][0],tabuleiro[2][1],tabuleiro[2][2]],
-		[tabuleiro[0][0],tabuleiro[1][0],tabuleiro[2][0]],
-		[tabuleiro[0][1],tabuleiro[1][1],tabuleiro[2][1]],
-		[tabuleiro[0][2],tabuleiro[1][2],tabuleiro[2][2]],
-		[tabuleiro[0][0],tabuleiro[1][1],tabuleiro[2][2]],
-		[tabuleiro[0][2],tabuleiro[1][1],tabuleiro[2][0]]
-	] 
-	#Verifica se o array de jogador está em algum estado de vitoria
-	#Se sim, retorna verdadeiro, pois o mesmo ganhou
-	#Caso contrario, falso
-	if([jogador,jogador,jogador]in win_estado):
-		return true
-	return false
-
-
+	return true; 
 #Retorna um array de posicoes vazias no tabuleiro
-func celulas_vazias(tab):
+func empty_cells(tab):
 	var celulas=[]
 	for i in range(len(tab)):
 		for j in range(len(tab[i])):
@@ -203,28 +199,38 @@ func _process(delta):
 		if(check_winner()==1):
 			#Muda o jogador atual para 0 a fim do mesmo não poder mais selecionar nada
 			# Assim como a IA
-			current_player=0
+			jogador_atual=0
 			#Toca a animacao de desenho da linha
 			$SceneManager.play_animation(jogador)
 			#Adiciona-se um timer de um segundo
 			yield(get_tree().create_timer(1),"timeout") 
 			#Carrega a tela de vitoria
-			get_tree().change_scene("res://Scenes/WIN.tscn")
+			if(Dificuldade.MULTIPLAYER==Dificuldade.get_difficulty()):
+				get_tree().change_scene("res://Scenes/Player1Wins.tscn")
+			else:
+				get_tree().change_scene("res://Scenes/SinglePlayerWins.tscn")
 		elif(check_winner()==2):
 			#Muda o jogador atual para 0 a fim do mesmo não poder mais selecionar nada
 			# Assim como a IA
-			current_player=0
+			jogador_atual=0
 			#Toca a animacao de desenho da linha 			
 			$SceneManager.play_animation(cpu)
 			#Adiciona-se um timer de um segundo
 			yield(get_tree().create_timer(1),"timeout")
 			#Carrega a tela de vitoria
-			get_tree().change_scene("res://Scenes/Lose.tscn")
+			#Carrega a tela de vitoria
+			if(Dificuldade.MULTIPLAYER==Dificuldade.get_difficulty()):
+				get_tree().change_scene("res://Scenes/Player2Wins.tscn")
+			else:
+				get_tree().change_scene("res://Scenes/Lose.tscn")
 		else:
 			#Muda o jogador atual para 0 a fim do mesmo não poder mais selecionar nada
 			# Assim como a IA
-			current_player=0
+			jogador_atual=0
 			yield(get_tree().create_timer(1),"timeout")
 			#Carrega a tela de empate
 			get_tree().change_scene("res://Scenes/Tie.tscn")
 		return;
+
+
+
